@@ -6,6 +6,34 @@ const FALLBACK_DATA = {
   entries: {}
 };
 
+// Simple status/banner helper - will create a small area under the header to show mode/errors
+function ensureStatusArea(){
+  let s = document.getElementById('appStatus');
+  if(!s){
+    s = document.createElement('div');
+    s.id = 'appStatus';
+    s.style.padding = '8px';
+    s.style.background = '#fff6e6';
+    s.style.border = '1px solid #ffdca8';
+    s.style.margin = '8px 0';
+    const header = document.querySelector('header') || document.body;
+    header.parentNode.insertBefore(s, header.nextSibling);
+  }
+  return s;
+}
+
+function showStatus(msg, level='info'){
+  const s = ensureStatusArea();
+  s.textContent = msg;
+  if(level==='error') s.style.background='#ffe6e6';
+  else s.style.background='#fff6e6';
+}
+
+// global error catcher to surface JS errors to the user
+window.addEventListener('error', function(ev){
+  try{ showStatus('JavaScript error: ' + (ev && ev.message ? ev.message : ev), 'error'); }catch(e){}
+});
+
 async function loadData(){
   // Try to fetch the JSON (works when served over HTTP). If that fails (file:// or missing),
   // fall back to the embedded sample data so the UI is usable without running a local server.
@@ -184,16 +212,19 @@ async function main(){
   // If Firebase config exists, use Firestore mode (shared across devices)
   const fs = await initFirestoreIfNeeded();
   if(fs){
+    showStatus('Using Firestore (shared) — attempts to write will target your Firestore project.');
     enableFirestoreUI(dateInput, data, today, fs.db, fs.docRef);
     return;
   }
 
   if(apiAvailable){
+    showStatus('Connected to local API (shared).');
     enableInteractiveUI(dateInput, data, today);
   } else {
     // show hint and enable local-only interactive UI (uses browser localStorage)
     const hdr = document.querySelector('header .muted');
-    hdr.textContent = hdr.textContent + ' (running in read-only mode; enabling local-only mode so you can mark entries in this browser)';
+    if(hdr) hdr.textContent = hdr.textContent + ' (running in read-only mode; enabling local-only mode so you can mark entries in this browser)';
+    showStatus('Local-only mode: marks are saved in your browser only (localStorage).');
     enableLocalInteractiveUI(dateInput, data, today);
   }
 }
@@ -236,11 +267,21 @@ function enableFirestoreUI(dateInput, data, today, db, docRef){
       name.style.marginRight = '8px';
       const doneBtn = document.createElement('button');
       doneBtn.textContent = 'Done';
-      doneBtn.addEventListener('click', ()=>markFirestore(d,u,'done'));
+      doneBtn.addEventListener('click', ()=>{
+        markFirestore(d,u,'done').catch(e=>{
+          console.error('Firestore write failed', e);
+          alert('Failed to save change to Firestore: ' + (e && e.message ? e.message : e));
+        });
+      });
       const missedBtn = document.createElement('button');
       missedBtn.textContent = 'Missed';
       missedBtn.style.marginLeft = '6px';
-      missedBtn.addEventListener('click', ()=>markFirestore(d,u,'missed'));
+      missedBtn.addEventListener('click', ()=>{
+        markFirestore(d,u,'missed').catch(e=>{
+          console.error('Firestore write failed', e);
+          alert('Failed to save change to Firestore: ' + (e && e.message ? e.message : e));
+        });
+      });
       row.appendChild(name);
       row.appendChild(doneBtn);
       row.appendChild(missedBtn);
@@ -290,6 +331,10 @@ function enableInteractiveUI(dateInput, data, today){
         renderInteractiveForDate(d);
         renderTotals(computeTotals(data));
         renderHistory(data);
+      }).catch(e=>{
+        console.error('API mark failed', e);
+        showStatus('Failed to mark via API: ' + (e && e.message ? e.message : e), 'error');
+        alert('Failed to save change to server: ' + (e && e.message ? e.message : e));
       }));
       const missedBtn = document.createElement('button');
       missedBtn.textContent = 'Missed';
@@ -299,6 +344,10 @@ function enableInteractiveUI(dateInput, data, today){
         renderInteractiveForDate(d);
         renderTotals(computeTotals(data));
         renderHistory(data);
+      }).catch(e=>{
+        console.error('API mark failed', e);
+        showStatus('Failed to mark via API: ' + (e && e.message ? e.message : e), 'error');
+        alert('Failed to save change to server: ' + (e && e.message ? e.message : e));
       }));
       row.appendChild(name);
       row.appendChild(doneBtn);
@@ -312,9 +361,17 @@ function enableInteractiveUI(dateInput, data, today){
     closeBtn.style.marginTop = '8px';
     closeBtn.addEventListener('click', ()=>{
       fetch('/api/close-day', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({date:d})})
-        .then(r=>r.json()).then(j=>{
+        .then(async r=>{
+          if(!r.ok){ const txt = await r.text(); throw new Error('close-day failed: '+txt); }
+          return r.json();
+        })
+        .then(j=>{
           // reflect change by reloading from API
-          return fetch('/api/data').then(r=>r.json()).then(remote=>{ const mapped = applyNameMapToData(remote); data.users = mapped.users; data.entries = mapped.entries; renderInteractiveForDate(d); renderTotals(computeTotals(data)); renderHistory(data); });
+          return fetch('/api/data').then(async r=>{ if(!r.ok){ const t=await r.text(); throw new Error('failed to fetch data: '+t); } return r.json(); }).then(remote=>{ const mapped = applyNameMapToData(remote); data.users = mapped.users; data.entries = mapped.entries; renderInteractiveForDate(d); renderTotals(computeTotals(data)); renderHistory(data); });
+        }).catch(e=>{
+          console.error('close-day API failed', e);
+          showStatus('Failed to close day via API: ' + (e && e.message ? e.message : e), 'error');
+          alert('Failed to close day: ' + (e && e.message ? e.message : e));
         });
     });
     entriesArea.appendChild(closeBtn);
@@ -331,7 +388,11 @@ function enableInteractiveUI(dateInput, data, today){
 
 async function markRemote(date, user, status){
   const r = await fetch('/api/mark', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({date, user, status})});
-  if(!r.ok) throw new Error('mark failed');
+  if(!r.ok){
+    let body='';
+    try{ body = await r.text(); }catch(e){}
+    throw new Error('mark failed: ' + (body||r.statusText||r.status));
+  }
   return r.json();
 }
 
