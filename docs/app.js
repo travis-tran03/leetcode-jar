@@ -204,11 +204,11 @@ async function main(){
   });
 
   // If a backend is available, enable interactive marking.
-  let apiAvailable = false;
-  try{
-    const r = await fetch('/api/ping');
-    apiAvailable = r.ok;
-  }catch(e){ apiAvailable = false }
+  // let apiAvailable = false;
+  // try{
+  //   const r = await fetch('/api/ping');
+  //   apiAvailable = r.ok;
+  // }catch(e){ apiAvailable = false }
   // If Firebase config exists, use Firestore mode (shared across devices)
   const fs = await initFirestoreIfNeeded();
   if(fs){
