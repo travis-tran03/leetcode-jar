@@ -184,6 +184,23 @@ async function main(){
   enableLocalInteractiveUI(dateInput, data, today);
 }
 
+async function markFirestore(date, user, status) {
+  if (!window.FIREBASE_CONFIG) throw new Error('Firestore not configured');
+
+  const db = firebase.firestore();
+  const docRef = db.collection('jar').doc('data');
+
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(docRef);
+    const data = snap.data() || { users: [], entries: {} };
+    data.entries = data.entries || {};
+    data.entries[date] = data.entries[date] || {};
+    data.entries[date][user] = status;
+    tx.set(docRef, data);
+  });
+}
+
+
 
 // Firestore-backed interactive UI
 function enableFirestoreUI(dateInput, data, today, db, docRef){
