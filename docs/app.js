@@ -190,7 +190,12 @@ function enableFirestoreUI(dateInput, data, today, db, docRef){
   // subscribe to realtime updates
   docRef.onSnapshot((snap) => {
     let val = snap.data() || { users: [], entries: {} };
-
+    console.log('Raw Firestore data:', val);
+    
+    // Check type of users
+    console.log('data.users type:', typeof val.users);
+    console.log('Is data.users an array?', Array.isArray(val.users));
+    console.log('data.users value:', val.users);
     // Make sure users is always an array
     if (!Array.isArray(val.users)) {
       console.warn('Firestore users is not an array, forcing empty array:', val.users);
