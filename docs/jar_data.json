@@ -1,4 +1,9 @@
 {
-  "users": ["travis", "david"],
-  "entries": {}
+  "users": ["travis","david"],
+  "entries": {
+    "2025-10-05": {
+      "travis": "done",
+      "david": "missed"
+    }
+  }
 }
