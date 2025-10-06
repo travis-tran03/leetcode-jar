@@ -1,4 +1,4 @@
-const DATA_PATH = './.jar_data.json';
+const DATA_PATH = './jar_data.json';
 
 // Fallback sample data used when the page is opened from the file system
 const FALLBACK_DATA = {
