@@ -216,7 +216,7 @@ async function main(){
   //   enableFirestoreUI(dateInput, data, today, fs.db, fs.docRef);
   //   return;
   // }
-
+  enableLocalInteractiveUI(dateInput, data, today);
   if(apiAvailable){
     showStatus('Connected to local API (shared).');
     enableInteractiveUI(dateInput, data, today);
