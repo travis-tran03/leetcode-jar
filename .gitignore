@@ -1,0 +1,6 @@
+.jar_data.json
+__pycache__/
+*.pyc
+*.pyo
+env/
+venv/

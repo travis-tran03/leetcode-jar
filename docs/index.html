@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LeetCode Jar — Viewer</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;margin:18px}
+    header{display:flex;align-items:center;justify-content:space-between}
+    h1{margin:0 0 8px}
+    .card{border:1px solid #ddd;padding:12px;border-radius:8px;margin:8px 0}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:6px 8px;border-bottom:1px solid #eee;text-align:left}
+    .muted{color:#666;font-size:0.9em}
+    .controls{display:flex;gap:8px;align-items:center}
+    .user-pill{display:inline-block;background:#f3f4f6;padding:4px 8px;border-radius:999px;margin-right:6px}
+    footer{margin-top:18px;color:#666;font-size:0.9em}
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>LeetCode Jar — Viewer</h1>
+      <div class="muted">View-only UI (static). Publish this folder to GitHub Pages to host.</div>
+    </div>
+    <div class="controls">
+      <label for="date">Show date</label>
+      <input id="date" type="date" />
+      <button id="load">Load</button>
+      <a id="downloadCSV" href="#">Download CSV</a>
+    </div>
+  </header>
+
+  <section class="card" id="summary">
+    <strong>Totals</strong>
+    <div id="totalsArea" class="muted">Loading...</div>
+  </section>
+
+  <section class="card" id="todayStatus">
+    <strong>Entries</strong>
+    <div id="entriesArea" class="muted">Loading...</div>
+  </section>
+
+  <section class="card" id="history">
+    <strong>History</strong>
+    <table id="historyTable">
+      <thead><tr><th>Date</th><th>User</th><th>Status</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <footer>
+    Tip: to make this live, copy your real `.jar_data.json` into this `docs/` folder as `.jar_data.json` and push to GitHub; then enable Pages on branch `main` folder `/docs`.
+  </footer>
+
+  <script src="./app.js"></script>
+  <!-- Firebase libs (compat) - optional, used when you provide firebase-config.js -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <!-- Optional: drop a firebase-config.js (copy firebase-config.example.js and add your config) -->
+  <script src="./firebase-config.js"></script>
+</body>
+</html>
