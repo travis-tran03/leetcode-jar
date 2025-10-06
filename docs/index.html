@@ -53,12 +53,11 @@
     Tip: to make this live, copy your real `.jar_data.json` into this `docs/` folder as `.jar_data.json` and push to GitHub; then enable Pages on branch `main` folder `/docs`.
   </footer>
 
-  <script src="./app.js"></script>
-  <!-- Firebase libs (compat) - optional, used when you provide firebase-config.js -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-  <!-- Optional: drop a firebase-config.js (copy firebase-config.example.js and add your config) -->
-  <script src="./firebase-config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="./firebase-config.js"></script> <!-- sets window.FIREBASE_CONFIG -->
+    <script src="./app.js"></script> <!-- main app code -->
+
 </body>
 </html>

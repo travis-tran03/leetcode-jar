@@ -166,68 +166,24 @@ function makeCSV(data){
 }
 
 async function main(){
-  const data = await loadData();
-  applyNameMapToData(data);
-  const totals = computeTotals(data);
-  renderTotals(totals);
+  const data = {}; // empty object for Firestore
   const dateInput = document.getElementById('date');
   const today = new Date().toISOString().slice(0,10);
-  // Default the date picker to the most recent date that has entries, otherwise today.
-  let defaultDate = today;
-  try{
-    const dates = Object.keys(data.entries || {}).sort();
-    if(dates.length){
-      const latest = dates[dates.length - 1];
-      // If today's date exists in data, prefer it; otherwise use latest available entry.
-      defaultDate = (data.entries && data.entries[today]) ? today : latest;
+  dateInput.value = today;
+
+  if(window.FIREBASE_CONFIG){
+    const fs = await initFirestoreIfNeeded();
+    if(fs){
+      showStatus('Using Firestore (shared) — attempts to write will target your Firestore project.');
+      enableFirestoreUI(dateInput, data, today, fs.db, fs.docRef);
+      return;
     }
-  }catch(e){ /* ignore and fallback to today */ }
-  dateInput.value = defaultDate;
-  renderEntriesForDate(data, defaultDate);
-  renderHistory(data);
-
-  document.getElementById('load').addEventListener('click', ()=>{
-    const d = dateInput.value||today;
-    renderEntriesForDate(data, d);
-  });
-
-  const dl = document.getElementById('downloadCSV');
-  dl.addEventListener('click', (e)=>{
-    e.preventDefault();
-    const csv = makeCSV(data);
-    const blob = new Blob([csv], {type:'text/csv'});
-    const url = URL.createObjectURL(blob);
-    dl.href = url;
-    dl.download = 'jar_history.csv';
-    dl.click();
-    URL.revokeObjectURL(url);
-  });
-
-  // If a backend is available, enable interactive marking.
-  // let apiAvailable = false;
-  // try{
-  //   const r = await fetch('/api/ping');
-  //   apiAvailable = r.ok;
-  // }catch(e){ apiAvailable = false }
-  // If Firebase config exists, use Firestore mode (shared across devices)
-  // const fs = await initFirestoreIfNeeded();
-  // if(fs){
-  //   showStatus('Using Firestore (shared) — attempts to write will target your Firestore project.');
-  //   enableFirestoreUI(dateInput, data, today, fs.db, fs.docRef);
-  //   return;
-  // }
-  enableLocalInteractiveUI(dateInput, data, today);
-  if(apiAvailable){
-    showStatus('Connected to local API (shared).');
-    enableInteractiveUI(dateInput, data, today);
-  } else {
-    // show hint and enable local-only interactive UI (uses browser localStorage)
-    const hdr = document.querySelector('header .muted');
-    if(hdr) hdr.textContent = hdr.textContent + ' (running in read-only mode; enabling local-only mode so you can mark entries in this browser)';
-    showStatus('Local-only mode: marks are saved in your browser only (localStorage).');
-    enableLocalInteractiveUI(dateInput, data, today);
   }
+
+  showStatus('No backend configured — using local interactive mode.');
+  enableLocalInteractiveUI(dateInput, data, today);
 }
+
 
 // Firestore-backed interactive UI
 function enableFirestoreUI(dateInput, data, today, db, docRef){
