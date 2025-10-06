@@ -188,28 +188,26 @@ async function main(){
 // Firestore-backed interactive UI
 function enableFirestoreUI(dateInput, data, today, db, docRef){
   // subscribe to realtime updates
-  docRef.onSnapshot((snap)=>{
-    const val = snap.data() || {users:[], entries:{}};
+  docRef.onSnapshot((snap) => {
+    let val = snap.data() || { users: [], entries: {} };
+
+    // Make sure users is always an array
+    if (!Array.isArray(val.users)) {
+      console.warn('Firestore users is not an array, forcing empty array:', val.users);
+      val.users = [];
+    }
+
     const mapped = applyNameMapToData(val);
     data.users = mapped.users || [];
     data.entries = mapped.entries || {};
+
     renderTotals(computeTotals(data));
     renderHistory(data);
-    const d = dateInput.value||today;
+    const d = dateInput.value || today;
     renderEntriesForDate(data, d);
+    renderForDate(d);
   });
 
-  // reuse interactive UI but implement marking via firestore
-  function markFirestore(date, user, status){
-    return db.runTransaction(async (tx)=>{
-      const snap = await tx.get(docRef);
-      const cur = snap.data() || {users:[], entries:{}};
-      cur.entries = cur.entries || {};
-      cur.entries[date] = cur.entries[date] || {};
-      cur.entries[date][user] = status;
-      tx.set(docRef, cur);
-    });
-  }
 
   const entriesArea = document.getElementById('entriesArea');
   function renderForDate(d){
