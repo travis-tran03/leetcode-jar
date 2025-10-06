@@ -404,12 +404,11 @@ function enableLocalInteractiveUI(dateInput, data, today){
   if(localRaw){
     try{
       const local = JSON.parse(localRaw);
-      // overlay entries
       data.entries = Object.assign({}, data.entries || {}, local.entries || {});
-      // prefer local users if present
       if(Array.isArray(local.users) && local.users.length) data.users = local.users;
-      // apply name mapping to merged data immediately
-      applyNameMapToData(data);
+
+      // Remove this line — it overwrites your merged data
+      // applyNameMapToData(data);
     }catch(e){ console.warn('failed to parse local data', e); }
   }
 
@@ -420,6 +419,7 @@ function enableLocalInteractiveUI(dateInput, data, today){
   }
 
   function renderLocalForDate(d){
+    if(!data.users || !data.users.length) data.users = ['travis','david'];
     const day = data.entries?.[d]||{};
     entriesArea.innerHTML = '';
     for(const u of data.users){
