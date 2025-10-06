@@ -210,12 +210,12 @@ async function main(){
   //   apiAvailable = r.ok;
   // }catch(e){ apiAvailable = false }
   // If Firebase config exists, use Firestore mode (shared across devices)
-  const fs = await initFirestoreIfNeeded();
-  if(fs){
-    showStatus('Using Firestore (shared) — attempts to write will target your Firestore project.');
-    enableFirestoreUI(dateInput, data, today, fs.db, fs.docRef);
-    return;
-  }
+  // const fs = await initFirestoreIfNeeded();
+  // if(fs){
+  //   showStatus('Using Firestore (shared) — attempts to write will target your Firestore project.');
+  //   enableFirestoreUI(dateInput, data, today, fs.db, fs.docRef);
+  //   return;
+  // }
 
   if(apiAvailable){
     showStatus('Connected to local API (shared).');
